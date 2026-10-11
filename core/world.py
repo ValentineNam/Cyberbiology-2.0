@@ -1,6 +1,6 @@
 """Независимый мир без игровых механик и транспорта."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from random import Random
 
@@ -125,13 +125,22 @@ class World:
         self._entities[entity_id] = moved
         return moved
 
-    def step(self, update: Callable[["World", Entity], None] | None = None) -> None:
+    def step(
+        self, update: Callable[["World", Entity], None] | None = None,
+        *, order: Sequence[int] | None = None,
+    ) -> None:
         """Обновить начальные ID один раз. Ошибка обработчика не откатывает мир."""
         if self._stepping:
             raise RuntimeError("Вложенный step запрещён")
         if update is not None and not callable(update):
             raise TypeError("update должен быть вызываемым обработчиком или None")
-        participants = sorted(self._entities)
+        participants = sorted(self._entities) if order is None else list(order)
+        for entity_id in participants:
+            _require_int(entity_id, "entity_id")
+        if len(set(participants)) != len(participants):
+            raise ValueError("Порядок шага содержит повторные ID")
+        for entity_id in participants:
+            self._require_entity(entity_id)
         self._stepping = True
         try:
             for entity_id in participants:
