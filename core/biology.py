@@ -130,9 +130,34 @@ class ResourceEntity:
     generation: int = 0
 
 
+class DeathContext(StrEnum):
+    TURN_START = "turn_start"
+    METABOLISM = "metabolism"
+    OWN_ACTION = "own_action"
+    OTHER_FEEDING = "other_feeding"
+
+
+@dataclass(frozen=True)
+class DeathRecord:
+    tick: int
+    entity_id: int
+    kind: Kind
+    profile: PlantProfile | None
+    age: int
+    max_age: int
+    energy: int
+    minerals: int
+    reasons: tuple[str, ...]
+    context: DeathContext
+
+
 class BiologicalWorld:
     def __init__(self, width: int, height: int, *, seed: int, reserve: int,
-                 config: RulesConfig | None = None):
+                 config: RulesConfig | None = None, record_deaths: bool = False):
+        if type(record_deaths) is not bool:
+            raise TypeError("record_deaths должен быть bool")
+        self._record_deaths = record_deaths
+        self._death_records: list[DeathRecord] = []
         self._nonnegative(reserve, "reserve")
         if config is not None and type(config) is not RulesConfig:
             raise TypeError("config должен быть RulesConfig")
@@ -354,7 +379,7 @@ class BiologicalWorld:
                                                 minerals=entity.minerals + minerals)
             self._entities[target.id] = replace(target, energy=target.energy - energy,
                                                 minerals=target.minerals - minerals)
-            self._die_if_needed(target.id)
+            self._die_if_needed(target.id, context=DeathContext.OTHER_FEEDING)
             return energy > 0 or minerals > 0
         if action == Action.PHOTOSYNTHESIS:
             gain = min(c.photosynthesis_gain, c.energy_max - entity.energy, self.reserve)
@@ -386,7 +411,12 @@ class BiologicalWorld:
             counts[key] += 1
         return {**self._events, **counts}
 
-    def _die_if_needed(self, entity_id: int) -> bool:
+    @property
+    def death_records(self) -> tuple[DeathRecord, ...]:
+        return tuple(self._death_records)
+
+    def _die_if_needed(self, entity_id: int, *,
+                       context: DeathContext = DeathContext.OWN_ACTION) -> bool:
         entity = self.get(entity_id)
         if entity is None:
             return True
@@ -398,6 +428,15 @@ class BiologicalWorld:
                    else self.config.plant(entity.profile).max_age)
         if entity.energy > 0 and entity.minerals > 0 and entity.age < maximum:
             return False
+        if self._record_deaths:
+            reasons = tuple(reason for reason, triggered in (
+                ("age_limit", entity.age >= maximum),
+                ("energy_depleted", entity.energy == 0),
+                ("minerals_depleted", entity.minerals == 0),
+            ) if triggered)
+            self._death_records.append(DeathRecord(
+                self.tick + int(self._stepping), entity.id, entity.kind, entity.profile,
+                entity.age, maximum, entity.energy, entity.minerals, reasons, context))
         # Удаление технической записи: ресурсный remove здесь НЕ вызывается.
         self._world.remove(entity.id)
         del self._entities[entity.id]
@@ -495,13 +534,13 @@ class BiologicalWorld:
                             continue
                         entity = replace(entity, age=entity.age + 1)
                         self._entities[entity.id] = entity
-                        if self._die_if_needed(entity.id):
+                        if self._die_if_needed(entity.id, context=DeathContext.TURN_START):
                             continue
                         if kind == Kind.PLANT:
                             self._grow(entity)
                         else:
                             self._spend(entity, self.config.metabolism)
-                            if self._die_if_needed(entity.id):
+                            if self._die_if_needed(entity.id, context=DeathContext.METABOLISM):
                                 continue
                             adapter = OrganismAdapter(self, entity.id)
                             result = execute(entity.genome, sensors=adapter, perform=adapter.perform,
