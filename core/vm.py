@@ -30,6 +30,7 @@ class Sensors(Protocol):
 class StopReason(StrEnum):
     TERMINAL_ACTION = "terminal_action"
     BUDGET_EXHAUSTED = "budget_exhausted"
+    ADAPTER_STOPPED = "adapter_stopped"
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,7 @@ def execute(
     sensors: Sensors,
     perform: Callable[[Action], bool],
     rng: Random,
+    is_active: Callable[[], bool] | None = None,
 ) -> ExecutionResult:
     """Исполнить один вызов. Исключения адаптеров не перехватываются."""
     tape = validate_genome(genome)
@@ -71,6 +73,12 @@ def execute(
             success = perform(Action(opcode))
             if type(success) is not bool:
                 raise TypeError("Исполнитель должен вернуть bool")
+            if is_active is not None:
+                active = is_active()
+                if type(active) is not bool:
+                    raise TypeError("is_active должен вернуть bool")
+                if not active:
+                    return ExecutionResult(count, StopReason.ADAPTER_STOPPED, last_pc)
             if opcode in (1, 5, 6, 7, 8):
                 return ExecutionResult(count, StopReason.TERMINAL_ACTION, last_pc)
             offset = 1

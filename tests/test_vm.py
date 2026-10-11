@@ -219,6 +219,36 @@ class VMTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.run_tape(self.tape(1))
 
+    def test_explicit_adapter_stop_after_nonterminal_and_terminal_action(self):
+        for opcode in (2, 1):
+            self.perform.reset_mock()
+            result = execute(self.tape(opcode, 6), sensors=self.sensors,
+                             perform=self.perform, rng=self.rng, is_active=lambda: False)
+            self.assertEqual((result.instructions_executed, result.last_pc, result.reason),
+                             (1, 0, StopReason.ADAPTER_STOPPED))
+            self.perform.assert_called_once_with(Action(opcode))
+
+    def test_active_callback_true_preserves_execution(self):
+        result = execute(self.tape(2, 1), sensors=self.sensors,
+                         perform=self.perform, rng=self.rng, is_active=lambda: True)
+        self.assertEqual((result.instructions_executed, result.last_pc, result.reason),
+                         (2, 1, StopReason.TERMINAL_ACTION))
+
+    def test_active_callback_error_propagates(self):
+        failure = RuntimeError('Ошибка callback')
+        def active():
+            raise failure
+        with self.assertRaises(RuntimeError) as caught:
+            execute(self.tape(2, 1), sensors=self.sensors, perform=self.perform,
+                    rng=self.rng, is_active=active)
+        self.assertIs(caught.exception, failure)
+        self.perform.assert_called_once_with(Action.TURN_LEFT)
+
+    def test_active_callback_must_return_bool(self):
+        with self.assertRaises(TypeError):
+            execute(self.tape(1), sensors=self.sensors, perform=self.perform,
+                    rng=self.rng, is_active=lambda: 0)
+
 
 if __name__ == '__main__':
     unittest.main()

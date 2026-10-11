@@ -1,4 +1,4 @@
-"""Запуск: python3 -m core.biology_example. Пять тиков без жизненного цикла."""
+"""Запуск: python3 -m core.biology_example. Пять тиков ресурсных действий с текущими правилами жизни."""
 
 from .biology import BiologicalWorld
 
@@ -15,7 +15,7 @@ def main() -> None:
         stocks = [(e.id, e.energy, e.minerals) for e in world.entities]
         print(f"tick={world.tick}, порядок={[i for i, _ in results]}, "
               f"резерв={world.reserve}, R={world.total_resources}, запасы={stocks}")
-    print("Рост, смерть и размножение отсутствуют; это демонстрация действий, не эволюции.")
+    print("Пример показывает действия и смерть; для рождения и трёх растений: python3 -m core.lifecycle_example.")
 
 
 if __name__ == '__main__':

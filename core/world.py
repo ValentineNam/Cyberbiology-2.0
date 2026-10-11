@@ -141,12 +141,23 @@ class World:
             raise ValueError("Порядок шага содержит повторные ID")
         for entity_id in participants:
             self._require_entity(entity_id)
-        self._stepping = True
-        try:
+        def update_participants():
             for entity_id in participants:
                 entity = self._entities.get(entity_id)
                 if entity is not None and update is not None:
                     update(self, entity)
+
+        self.run_tick(update_participants)
+
+    def run_tick(self, update: Callable[[], None]) -> None:
+        """Одна граница тика для составного обновления, без отката эффектов."""
+        if self._stepping:
+            raise RuntimeError("Вложенный тик запрещён")
+        if not callable(update):
+            raise TypeError("update должен быть вызываемым обработчиком")
+        self._stepping = True
+        try:
+            update()
             self._tick += 1
         finally:
             self._stepping = False

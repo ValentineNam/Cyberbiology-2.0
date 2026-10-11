@@ -109,7 +109,7 @@ class BiologyTests(unittest.TestCase):
         costs = [4, 6, 4, 6, 4, 6, 4, 6]
         for direction, (position, cost) in enumerate(zip(expected, costs)):
             w = self.world()
-            a = w.create_organism(8, 5, tape(1), direction=direction, energy=10, minerals=0)
+            a = w.create_organism(8, 5, tape(1), direction=direction, energy=10, minerals=1)
             moved = self.action(w, a, Action.MOVE)
             self.assertEqual((moved.x, moved.y, moved.energy), (*position, 10-cost))
             self.assertIsNone(w.get_at(8, 5))
@@ -119,43 +119,45 @@ class BiologyTests(unittest.TestCase):
                  (8, 10), (0, 10), (0, 5), (0, 0)]
         for direction, (x, y) in enumerate(edges):
             w = self.world()
-            a = w.create_organism(x, y, tape(1), direction=direction, energy=2, minerals=0)
+            a = w.create_organism(x, y, tape(1), direction=direction, energy=2, minerals=1)
             self.assertEqual(OrganismAdapter(w, a.id).front(), 5)
             a = self.action(w, a, Action.MOVE, False)
             self.assertEqual((a.x, a.y, a.energy), (x, y, 1))
         w = self.world()
-        a = w.create_organism(1, 1, tape(1), energy=2, minerals=0)
+        a = w.create_organism(1, 1, tape(1), energy=2, minerals=1)
         w.create_remains(1, 0, energy=0, minerals=0)
         a = self.action(w, a, Action.MOVE, False)
         self.assertEqual(a.energy, 1)
 
     def test_insufficient_move_energy_never_charges_attempt_for_free_cell(self):
-        for direction, energy in ((0, 3), (1, 5), (0, 0)):
+        for direction, energy in ((0, 3), (1, 5)):
             w = self.world()
-            a = w.create_organism(8, 5, tape(1), direction=direction, energy=energy, minerals=0)
+            a = w.create_organism(8, 5, tape(1), direction=direction, energy=energy, minerals=1)
             before = self.snapshot(w)
             self.action(w, a, Action.MOVE, False)
             self.assertEqual(self.snapshot(w), before)
+        # Нулевой запас теперь вызывает смерть; бюджет/RNG всё равно сохраняются.
         w = self.world()
-        a = w.create_organism(0, 0, tape(1), energy=0, minerals=0)
-        before = self.snapshot(w)
+        a = w.create_organism(0, 0, tape(1), energy=0, minerals=1)
+        rng = w.rng.getstate()
         self.action(w, a, Action.MOVE, False)
-        self.assertEqual(self.snapshot(w), before)
+        self.assertIsNone(w.get(a.id))
+        self.assertEqual(w.rng.getstate(), rng)
 
     def test_turns_all_directions_and_rng(self):
         for direction in range(8):
             w = self.world()
-            a = w.create_organism(8, 5, tape(1), direction=direction, energy=2, minerals=0)
+            a = w.create_organism(8, 5, tape(1), direction=direction, energy=3, minerals=1)
             a = self.action(w, a, Action.TURN_LEFT)
-            self.assertEqual((a.direction, a.energy), ((direction-1) % 8, 1))
+            self.assertEqual((a.direction, a.energy), ((direction-1) % 8, 2))
             a = self.action(w, a, Action.TURN_RIGHT)
-            self.assertEqual((a.direction, a.energy), (direction, 0))
-            for action in (Action.TURN_LEFT, Action.TURN_RIGHT, Action.TURN_RANDOM):
-                before = self.snapshot(w)
-                self.action(w, a, action, False)
-                self.assertEqual(self.snapshot(w), before)
+            self.assertEqual((a.direction, a.energy), (direction, 1))
+            state = w.rng.getstate()
+            self.action(w, a, Action.TURN_RANDOM, False)  # Смерть на оплате.
+            self.assertIsNone(w.get(a.id))
+            self.assertEqual(w.rng.getstate(), state)
         w = self.world()
-        a = w.create_organism(8, 5, tape(1), energy=20, minerals=0)
+        a = w.create_organism(8, 5, tape(1), energy=20, minerals=1)
         reference = Random(42)
         for _ in range(8):
             a = self.action(w, a, Action.TURN_RANDOM)
@@ -182,54 +184,56 @@ class BiologyTests(unittest.TestCase):
             self.assertEqual(OrganismAdapter(w, a.id).front(), 4)
         for energy, hungry in ((204, True), (205, False), (0, True), (1024, False)):
             w = self.world()
-            a = w.create_organism(1, 1, tape(1), energy=energy, minerals=0)
+            a = w.create_organism(1, 1, tape(1), energy=energy, minerals=1)
             self.assertEqual(OrganismAdapter(w, a.id).hungry(), hungry)
 
     def test_eat_organism_and_all_plant_profiles(self):
         for kind, bite, minerals in (('organism', 80, 16), ('tree', 120, 30),
                                      ('bush', 120, 30), ('grass', 120, 30)):
             w = self.world()
-            a = w.create_organism(1, 1, tape(5), energy=10, minerals=0)
+            a = w.create_organism(1, 1, tape(5), energy=10, minerals=1)
             if kind == 'organism':
                 target = w.create_organism(1, 0, tape(5), energy=150, minerals=40)
             else:
                 target = w.create_plant(1, 0, kind, energy=150, minerals=40)
             a = self.action(w, a, Action.EAT)
-            self.assertEqual((a.energy, a.minerals), (9+bite, minerals))
+            self.assertEqual((a.energy, a.minerals), (9+bite, minerals+1))
             target = w.get(target.id)
             self.assertEqual((target.energy, target.minerals), (150-bite, 40-minerals))
 
     def test_eat_price_before_transfer_and_rounding(self):
         for kind, energy in (('organism', 6), ('tree', 5)):
             w = self.world()
-            a = w.create_organism(1, 1, tape(5), energy=1024, minerals=0)
+            a = w.create_organism(1, 1, tape(5), energy=1024, minerals=1)
             if kind == 'organism':
                 target = w.create_organism(1, 0, tape(5), energy=energy, minerals=10)
             else:
                 target = w.create_plant(1, 0, kind, energy=energy, minerals=10)
             a = self.action(w, a, Action.EAT)
-            # Оплата освобождает ровно 1 E ёмкости: перенос 1 E и ceil(1/divisor)=1 M.
-            self.assertEqual((a.energy, a.minerals), (1024, 1))
+            self.assertEqual((a.energy, a.minerals), (1024, 2))
             self.assertEqual(w.get(target.id).energy, energy-1)
             w.remove(a.id)
-            a = w.create_organism(1, 1, tape(5), energy=1, minerals=255)
+            a = w.create_organism(1, 1, tape(5), energy=2, minerals=255)
             a = self.action(w, a, Action.EAT)
-            self.assertEqual(a.minerals, 256)  # Свободная ёмкость ограничивает округление.
-            self.assertEqual(a.energy, energy-1)
+            self.assertEqual((a.energy, a.minerals), (energy, 256))
+            self.assertIsNone(w.get(target.id))  # Цель погибла сразу.
+            self.assertEqual(w.get_at(1, 0).minerals, 8)
         w = self.world()
-        a = w.create_organism(1, 1, tape(5), energy=1, minerals=0)
+        a = w.create_organism(1, 1, tape(5), energy=2, minerals=1)
         t = w.create_organism(1, 0, tape(5), energy=6, minerals=10)
         a = self.action(w, a, Action.EAT)
-        self.assertEqual((a.energy, a.minerals), (6, 2))
-        self.assertEqual((w.get(t.id).energy, w.get(t.id).minerals), (0, 8))
+        self.assertEqual((a.energy, a.minerals), (7, 3))
+        self.assertIsNone(w.get(t.id))
+        self.assertEqual((w.get_at(1, 0).energy, w.get_at(1, 0).minerals), (0, 8))
 
     def test_plant_minerals_round_up_from_actual_energy(self):
         w = self.world()
-        a = w.create_organism(1, 1, tape(5), energy=1, minerals=0)
+        a = w.create_organism(1, 1, tape(5), energy=2, minerals=1)
         target = w.create_plant(1, 0, 'tree', energy=5, minerals=10)
         a = self.action(w, a, Action.EAT)
-        self.assertEqual((a.energy, a.minerals), (5, 2))
-        self.assertEqual((w.get(target.id).energy, w.get(target.id).minerals), (0, 8))
+        self.assertEqual((a.energy, a.minerals), (6, 3))
+        self.assertIsNone(w.get(target.id))
+        self.assertEqual((w.get_at(1, 0).energy, w.get_at(1, 0).minerals), (0, 8))
         before = self.snapshot(w)
         adapter = OrganismAdapter(w, a.id)
         adapter.front()
@@ -237,8 +241,8 @@ class BiologyTests(unittest.TestCase):
         self.assertEqual(self.snapshot(w), before)
 
     def test_eat_remains_independent_minerals_and_limits(self):
-        for energy, eater_m, expected_e, expected_m in ((100, 0, 89, 20),
-                                                       (0, 0, 9, 20), (0, 255, 9, 256)):
+        for energy, eater_m, expected_e, expected_m in ((100, 1, 89, 21),
+                                                       (0, 1, 9, 21), (0, 255, 9, 256)):
             w = self.world()
             a = w.create_organism(1, 1, tape(5), energy=10, minerals=eater_m)
             target = w.create_remains(1, 0, energy=energy, minerals=25)
@@ -249,41 +253,52 @@ class BiologyTests(unittest.TestCase):
     def test_eat_empty_wall_no_energy_and_zero_target(self):
         for position in ((1, 1), (1, 0)):
             w = self.world()
-            a = w.create_organism(*position, tape(5), energy=1, minerals=0)
+            a = w.create_organism(*position, tape(5), energy=2, minerals=1)
             a = self.action(w, a, Action.EAT, False)
-            self.assertEqual(a.energy, 0)
+            self.assertEqual(a.energy, 1)
         for kind in ('organism', 'tree', 'remains'):
             w = self.world()
-            a = w.create_organism(1, 1, tape(5), energy=0, minerals=0)
+            a = w.create_organism(1, 1, tape(5), energy=0, minerals=1)
             if kind == 'organism':
                 t = w.create_organism(1, 0, tape(5), energy=0, minerals=10)
             elif kind == 'tree':
                 t = w.create_plant(1, 0, kind, energy=0, minerals=10)
             else:
                 t = w.create_remains(1, 0, energy=0, minerals=0)
-            before = self.snapshot(w)
             self.action(w, a, Action.EAT, False)
-            self.assertEqual(self.snapshot(w), before)
-            w.remove(a.id)
-            a = w.create_organism(1, 1, tape(5), energy=1, minerals=0)
+            self.assertIsNone(w.get(a.id))
+            self.assertEqual(w.get(t.id), t)
+            w.remove(w.get_at(1, 1).id)
+            a = w.create_organism(1, 1, tape(5), energy=2, minerals=1)
             a = self.action(w, a, Action.EAT, False)
-            self.assertEqual((a.energy, a.minerals), (0, 0))
-            self.assertEqual(w.get(t.id).minerals, 10 if kind != 'remains' else 0)
+            self.assertEqual((a.energy, a.minerals), (1, 1))
+            # Проверка после действия превращает нулевую живую цель в останки.
+            if kind != 'remains':
+                self.assertEqual(w.get_at(1, 0).minerals, 10)
+                self.assertIsNone(w.get(t.id))
+            else:
+                self.assertIsNone(w.get(t.id))
 
     def test_conversions_success_and_exact_boundaries(self):
         w = self.world()
-        a = w.create_organism(1, 1, tape(7), energy=992, minerals=8)
+        a = w.create_organism(1, 1, tape(7), energy=992, minerals=9)
         a = self.action(w, a, Action.MINERALS_TO_ENERGY)
-        self.assertEqual((a.energy, a.minerals), (1024, 0))
+        self.assertEqual((a.energy, a.minerals), (1024, 1))
         a = self.action(w, a, Action.ENERGY_TO_MINERALS)
-        self.assertEqual((a.energy, a.minerals), (992, 8))
+        self.assertEqual((a.energy, a.minerals), (992, 9))
         w.remove(a.id)
-        a = w.create_organism(1, 1, tape(8), energy=32, minerals=248)
+        a = w.create_organism(1, 1, tape(8), energy=33, minerals=248)
         a = self.action(w, a, Action.ENERGY_TO_MINERALS)
-        self.assertEqual((a.energy, a.minerals), (0, 256))
+        self.assertEqual((a.energy, a.minerals), (1, 256))
+        # Точное обнуление минералов теперь смертельно, но сохраняет конверсию/R.
+        w.remove(a.id)
+        a = w.create_organism(1, 1, tape(7), energy=992, minerals=8)
+        self.action(w, a, Action.MINERALS_TO_ENERGY)
+        self.assertIsNone(w.get(a.id))
+        self.assertEqual((w.get_at(1, 1).energy, w.get_at(1, 1).minerals), (1024, 0))
 
     def test_conversions_refuse_without_partial_changes(self):
-        cases = [(7, 0, 7), (7, 993, 8), (8, 31, 0), (8, 32, 249)]
+        cases = [(7, 1, 7), (7, 993, 8), (8, 31, 1), (8, 32, 249)]
         for opcode, energy, minerals in cases:
             w = self.world()
             a = w.create_organism(1, 1, tape(opcode), energy=energy, minerals=minerals)
@@ -293,10 +308,10 @@ class BiologyTests(unittest.TestCase):
 
     def test_photosynthesis_empty_partial_and_capacity(self):
         for reserve, energy, expected_energy, expected_reserve in (
-                (0, 0, 0, 0), (5, 0, 5, 0), (20, 0, 14, 6),
-                (1023+20, 1023, 1024, 19), (1024+20, 1024, 1024, 20)):
+                (5, 1, 1, 0), (10, 1, 6, 0), (25, 1, 15, 6),
+                (1023+4+20, 1023, 1024, 19), (1024+4+20, 1024, 1024, 20)):
             w = self.world(reserve)
-            a = w.create_organism(1, 1, tape(6), energy=energy, minerals=0)
+            a = w.create_organism(1, 1, tape(6), energy=energy, minerals=1)
             a = self.action(w, a, Action.PHOTOSYNTHESIS, expected_energy > energy)
             self.assertEqual((a.energy, w.reserve), (expected_energy, expected_reserve))
 
