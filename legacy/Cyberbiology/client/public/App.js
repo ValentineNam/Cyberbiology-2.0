@@ -1,0 +1,6 @@
+import React, { useState, useEffect } from 'react'
+import WorldCanvas from './components/WorldCanvas'
+import ControlPanel from './components/ControlPanel'
+import InfoPanel from './components/InfoPanel'
+import SimulationService from '../services/SimulationService'
+import './App.css'

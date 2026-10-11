@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			World Zero
+		</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="./css/style.css">
+		<script type="module" src="./js/index.js"></script>
+		<script type="module" src="./js/utils.js"></script>
+			</head>
+			
+			<body>               
+				<!-- <div class="header">
+					<h2>Header</h2>
+				</div> -->
+				
+				<div class="row">
+					<div class="column side" style="background-color:#aaa;">
+						<div class="side-menu">
+							<fieldset>
+								<legend>Preset options</legend>
+								<div class="preset-container">
+									<p>Bots:</p>
+									<input type="number" id="bots-count" min="1" max="500" value="200">
+									<p>Color:</p>
+									<select id="color-select">
+										<option value="1">One</option>
+										<option value="2">Two</option>
+									</select>
+									<div class="bot-color-preset"></div>
+								</div>
+								<div class="preset-container-2">
+										<p><input type="checkbox" name="editor-answer" value="on" checked>Trees</p>
+										<input type="number" id="trees-count" min="1" max="50" value="10">
+								</div>
+								<div class="preset-container-3">
+									<p><input type="checkbox" name="editor-answer" value="on" checked>Bush</p>
+									<input type="number" id="bush-count" min="1" max="50" value="15">
+								</div>
+								<div class="preset-container-4">
+									<p><input type="checkbox" name="editor-answer" value="on" checked>Grass</p>
+									<input type="number" id="grass-count" min="1" max="50" value="20">
+								</div>
+								<div class="buttons">
+									<input type="button" class="btn-1" id="generate-button" value="Generate">
+									<input type="button" class="btn-1" id="clear-button" value="Clear">
+								</div>
+							</fieldset>
+							<div class="buttons-container">
+								<div class="btn play-button">
+									<img src="images/play_button.jpg" id="play" alt="Play"> 
+								</div>
+								<div class="turn-output">
+									<input type="text" id="turn-counter" value="0"/>
+								</div>
+								<div>
+									<p>Turn</p>
+								</div>
+							</div>
+							<div class="energy-info-container">
+								<fieldset>
+									<legend>Used energy</legend>
+										<p><input type="text" id="used-energy" value="0"/></p>
+								</fieldset>
+								<fieldset>
+									<legend>Free energy</legend>
+										<p><input type="text" id="free-energy" value="0"/></p>
+								</fieldset>
+							</div>
+							<div class="render-speed-container">
+								<input type="range" min="1" max="32" value="1" list="tickmarks" step="1" id="render-speed-picker">
+								<datalist id="tickmarks">
+									<option value="1">
+									<option value="2">
+									<option value="4">
+									<option value="8">
+									<option value="16">
+									<option value="32">
+								</datalist>
+								<input type="text" id="render-speed-output" value="1"/>
+							</div>
+							<div class="render-mode">
+								<form id="render-mode-radio">
+								</form>
+								<fieldset form="render-mode-radio">
+									<legend>Render mode</legend>
+									<p><input type="radio" name="render-answer" value="color" checked>Color</p>
+									<p><input type="radio" name="render-answer" value="energy">Energy</p>
+								</fieldset>
+							</div>
+							<div class="cursor-mode">
+								<form id="cursor-mode-radio">
+								</form>
+								<fieldset form="cursor-mode-radio">
+									<legend>Cursor mode</legend>
+									<p><input type="radio" name="cursor-answer" value="picker" checked>Picker</p>
+									<p><input type="radio" name="cursor-answer" value="creator">Creator</p>
+									<p><input type="radio" name="cursor-answer" value="eraser">Eraser</p>
+								</fieldset>
+							</div>
+							<div class="info-output">
+								<p><textarea rows="12" cols="22" id="info-output" readonly></textarea></p>
+							</div>
+							<div class="editor-mode">
+								<p><input type="checkbox" name="editor-answer" value="on" checked>Edit</p>
+							</div>
+							<!-- <div class="info-output">
+								<p> Тут должен быть вывод инфо </p>
+							</div> -->
+							<div class="genom-field">
+								<p>Genom</p>
+								<p><textarea rows="3" cols="22" name="info-output" readonly></textarea></p>
+							</div>
+							<div class="age-field">
+								<p>Age</p>
+								<p><textarea rows="1" cols="22" name="info-output" readonly></textarea></p>
+							</div>
+							<div class="buttons">
+								<input type="button" class="btn-1" id="" value="Edit">
+							</div>
+						</div>
+					</div>
+					<div class="column middle" style="background-color:#bbb;">
+						<canvas> </canvas>
+					</div>
+					<div class="column side" style="background-color:#ccc;">Column</div>
+				</div>
+				
+				<!-- <div class="footer">
+					<p>Footer</p>
+				</div> -->
+			</body>
+</html>

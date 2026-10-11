@@ -1,0 +1,262 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+}
+
+/* Style the header */
+.header {
+    background-color: #f1f1f1;
+    padding: 5px;
+    text-align: center;
+    font-size: 30px;
+}
+
+/* Container for flexboxes */
+.row {
+    display: -webkit-flex;
+    display: flex;
+}
+
+/* Create three unequal columns that sits next to each other */
+.column {
+    padding: 10px;
+    /* heigh t: 300px; Should be removed. Only for demonstration */
+}
+
+/* Left and right column */
+.column.side {
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+}
+
+/* Middle column */
+.column.middle {
+    -webkit-flex: 2;
+    -ms-flex: 2;
+    flex: 2;
+    width: 781px;
+    height: 781px;
+    padding: 0;
+}
+
+/* Style the footer */
+.footer {
+    background-color: #f1f1f1;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+@media (max-width: 600px) {
+    .row {
+        -webkit-flex-direction: column;
+        flex-direction: column;
+    }
+}
+
+.side-menu {
+    width: 210px;
+    height: 760px;
+    background-color: burlywood;
+    display: flex; 
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    
+}
+
+.side-menu div p {
+    margin: 5px 0px 5px 5px;
+    font-size: 12px;
+}
+
+.side-menu fieldset {
+    margin: 10px 0px 0px 5px;
+    padding: 0px;
+    width: 200px;
+}
+
+.side-menu div fieldset legend, .side-menu fieldset legend {
+    font-size: 12px;
+}
+
+.render-mode input, .cursor-mode input {
+    height: 10px;
+    width: 10px;
+}
+
+.side-menu div fieldset {
+    margin: 0px 5px 0px 5px;
+    padding: 0px;
+}
+
+.preset-container, .preset-container-2, .preset-container-3, .preset-container-4 {
+    height: 20px;
+    width: 190px;
+    margin-top: 5px;
+    display: flex;
+    flex-direction: row;
+}
+
+.preset-container p {
+    align-self: center;
+    height: 16px;
+}
+
+.preset-container input {
+    font-size: 10px;
+    height: 16px;
+    width: 40px;
+    margin-left: 5px;
+    align-self: center;
+}
+
+.preset-container select {
+    font-size: 10px;
+    height: 16px;
+    margin-left: 5px;
+    align-self: center;
+}
+
+.preset-container div {
+    width: 16px;
+    height: 16px;
+    margin-left: 5px;
+    align-self: center;
+    border: black;
+    background-color: blue;
+}
+
+.preset-container-2 p, .preset-container-3 p, .preset-container-4 p {
+    align-self: center;
+    height: 16px;
+    width: 50px;
+}
+
+.preset-container-2 p input, .preset-container-3 p input, .preset-container-4 p input {
+    margin-left: 0px;
+    width: 10px;
+    height: 10px;
+}
+
+.preset-container-2 input, .preset-container-3 input, .preset-container-4 input {
+    font-size: 10px;
+    height: 16px;
+    width: 40px;
+    margin-left: 5px;
+    align-self: center;
+}
+
+.buttons {
+    /* display: flex;
+    flex-direction: row;
+    align-items: center; */
+}
+
+.btn-1 {
+    margin: 5px 0px 5px 5px;
+    font-size: 12px;
+}
+
+.buttons-container {
+    height: 30px;
+    width: 210px;
+    display: flex;
+    flex-direction: row;
+}
+
+.buttons-container div p {
+    margin: 10px 0px 0px 0px;
+}
+
+.energy-info-container {
+    height: 45px;
+    width: 210px;
+    display: flex;
+    flex-direction: row;
+}
+
+.energy-info-container fieldset {
+    height: 45px;
+    padding-inline-start: 5px;
+    padding-inline-end: 5px;
+}
+
+.energy-info-container fieldset p input{
+    font-size: 12px;
+    height: 20px;
+    width: 81px;
+    margin-right: 5px;
+}
+
+.btn {
+    background-color: DodgerBlue; /* Blue background */
+    height: 20px;
+    width: 20px;
+    border: none; /* Remove borders */
+    color: white; /* White text */
+    padding: 0px; /* Some padding */
+    font-size: 16px; /* Set a font size */
+}
+
+.btn:hover {
+	filter: brightness(120%);
+}
+
+.btn:active {
+	filter: brightness(90%);
+}
+
+.play-button {
+    margin: 5px;
+}
+
+.turn-output {
+    margin: 5px;
+}
+
+#turn-counter {
+    display: block;
+    width: 140px;
+    height: 20px;
+    font-size: 12px;
+}
+
+.render-speed-container {
+    height: 40px;
+    width: 210px;
+    display: flex;
+    flex-direction: row;
+}
+
+#render-speed-picker {
+    display: block;
+    width: 80%;
+}
+
+#render-speed-output {
+    display: block;
+    width: 15%;
+    height: 20px;
+    align-self: center;
+}
+
+.info-output {
+
+}
+
+.info-output p textarea {
+    font-size: 10px;
+    width: 200px;
+}
+
+.editor-mode input {
+    margin-left: 0px;
+    width: 10px;
+    height: 10px;
+}
+

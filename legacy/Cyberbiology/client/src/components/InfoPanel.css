@@ -1,0 +1,63 @@
+.info-panel {
+  background-color: #3a3a3a;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #555;
+  max-height: 100%;
+}
+
+.info-panel h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #ddd;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #444;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.info-item span:first-child {
+  color: #bbb;
+  font-weight: normal;
+}
+
+.info-item span:last-child {
+  color: #ddd;
+  font-weight: normal;
+  text-align: right;
+}
+
+.genom-display {
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #aaa;
+  line-height: 1.2;
+}
+
+.cell-info h4,
+.world-info h4 {
+  margin: 0 0 0.75rem 0;
+  color: #ccc;
+  font-size: 1rem;
+}
+
+.world-info,
+.cell-info {
+  margin-bottom: 1.5rem;
+}
+
+.world-info:last-child,
+.cell-info:last-child {
+  margin-bottom: 0;
+}

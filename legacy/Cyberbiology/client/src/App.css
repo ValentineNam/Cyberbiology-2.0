@@ -1,0 +1,76 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.app-header {
+  padding: 1rem;
+  background-color: #2d2d2d;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+}
+
+.connection-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.connection-status.connected {
+  background-color: #28a745;
+  color: white;
+}
+
+.connection-status.disconnected {
+  background-color: #dc3545;
+  color: white;
+}
+
+.app-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.canvas-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem;
+  overflow: auto;
+  background-color: #222;
+}
+
+.panel-container {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #2d2d2d;
+  border-left: 1px solid #444;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    flex-direction: column;
+  }
+  
+  .panel-container {
+    width: 100%;
+    flex-direction: row;
+    height: 300px;
+  }
+  
+  .canvas-container {
+    flex: none;
+    height: calc(100vh - 300px - 120px);
+  }
+}
